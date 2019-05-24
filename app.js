@@ -20,12 +20,9 @@ bot.start(function(ctx){
     /ebtedaii`)
 });
 
-<<<<<<< HEAD
-=======
 bot.command("motevassete",function(ctx) {
     ctx.reply("holy momy fucking shit :)")
 })
 
 //launch server
->>>>>>> 8472e9b6e8a4e3b876cb799a342f0ad69b4190eb
 bot.launch();
