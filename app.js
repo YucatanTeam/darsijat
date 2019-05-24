@@ -8,11 +8,9 @@ const con = require('./config/db');
 bot.start(function(ctx){
     
     
-    con.query(`SELECT * FROM user WHERE mId = ?` , [`${ctx.message.from.id}`],function(err,row){     
-        for (var i in row){
-          if(row[i].mId != ctx.message.from.id){
-            con.query(`INSERT INTO user(isPayed,mId) VALUES(?,?)`,[0,ctx.message.from.id])
-          }
+    con.query(`SELECT * FROM user WHERE mId = ?` , [`${ctx.message.from.id}`],function(err,row){ 
+      if(Object.entries(row).length === 0 && ctx.message.from.id != process.env.ADMIN_ID){ 
+          con.query(`INSERT INTO user(mId) VALUES(?)`,[ctx.message.from.id])
         }
     })
     ctx.reply(`test commands:
