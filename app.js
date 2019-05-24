@@ -6,13 +6,18 @@ const session = require('telegraf/session')
 const TelegrafInlineMenu = require('telegraf-inline-menu')
 const bot = new telegraf(process.env.TOKEN);
 const con = require('./config/db');
-const menu = new TelegrafInlineMenu(ctx => `سلام ${ctx.message.from.username}!`)
-menu.setCommand('start')
-menu.simpleButton('I am excited!', 'a', {
+
+const mainMenu = new TelegrafInlineMenu(ctx => `سلام ${ctx.message.from.username}!`)
+const fooMenu = new TelegrafInlineMenu('Foo Menu')
+const barMenu = new TelegrafInlineMenu('Bar Menu')
+mainMenu.setCommand('start')
+mainMenu.submenu('Open Foo Menu', 'foo', fooMenu)
+fooMenu.submenu('Open Bar Menu', 'bar', barMenu)
+barMenu.simpleButton('Hit me', 'something', {
   doFunc: ctx => ctx.reply('As am I!')
 })
 
-bot.use(menu.init())
+bot.use(mainMenu.init())
 bot.use(session({
     getSessionKey: (ctx) => {
       if (ctx.from && ctx.chat) {
