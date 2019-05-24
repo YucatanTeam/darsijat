@@ -23,6 +23,7 @@ bot.start(function(ctx){
       if(Object.entries(row).length === 0){
         // user use this bot for the first time
         con.query(`INSERT INTO user(mId) VALUES(?)`,[ctx.message.from.id])
+        ctx.session.isAdmin = false
       } else if(ctx.message.from.id != process.env.ADMIN_ID){ 
         // user already exists and is not admin
           ctx.session.isAdmin = false
