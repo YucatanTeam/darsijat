@@ -8,10 +8,8 @@
 </head>
 <body>
     <h3>login :</h3>
-    <form action="#!">
-        <input type="password" name="password" id="password">
-        <input type="button" value="login" onclick="login()">
-    </form>
+    <input type="password" name="password" id="password">
+    <input type="button" value="login" onclick="login()">
     <script>
         document.getElementById('password').focus()
         document.body.onkeypress = function (e) {
@@ -20,29 +18,7 @@
             }
         }
         function login() {
-            fetch("/login", {
-                method: 'POST', // *GET, POST, PUT, DELETE, etc.
-                cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-                headers: {
-                    'Content-Type': 'application/json',
-                    // 'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                redirect: 'follow', // manual, *follow, error
-                referrer: 'no-referrer', // no-referrer, *client
-                body: JSON.stringify({password: document.getElementById('password').value}), // body data type must match "Content-Type" header
-            }).then(res => {
-                if(res.redirected) {
-				    window.location.href = res.url;
-			    }
-			    return res;
-            }).then(res => res.json()).then(json => {
-                if(json.status == 1) {
-                    window.location.href = "/admin?p=" + document.getElementById('password').value;
-                }
-            }).catch(err => {
-                alert("error !");
-                console.error(err);
-            })
+            window.location.href = "/admin?p="+document.getElementById("password").value
         }
     </script>
 </body>
