@@ -9,6 +9,7 @@ DROP TABLE IF EXISTS `files`;
 CREATE TABLE `files` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `name` text NOT NULL,
+  `price` text NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -26,15 +27,16 @@ CREATE TABLE `tags` (
 
 DROP TABLE IF EXISTS `transactions`;
 CREATE TABLE `transactions` (
-  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `chat_id` int(10) unsigned NOT NULL,
-  `files_id` int(11) unsigned NOT NULL,
-  `status` tinyint(4) NOT NULL,
-  `details` text NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `files_id` (`files_id`),
-  CONSTRAINT `transactions_ibfk_1` FOREIGN KEY (`files_id`) REFERENCES `files` (`id`)
+  `status` int(11) NOT NULL,
+  `track_id` int(11) NOT NULL,
+  `id` text NOT NULL,
+  `order_id` text NOT NULL,
+  `amount` int(11) NOT NULL,
+  `card_no` text NOT NULL,
+  `hash_card_no` text NOT NULL,
+  `date` text NOT NULL,
+  `verify` tinyint(4) NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 
--- 2019-05-24 18:40:48
+-- 2019-05-24 20:28:00
