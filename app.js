@@ -2,12 +2,11 @@ require('dotenv').config()
 
 var request = require('request');
 const express = require('express');
+const path = require('path')
 const body = require('body-parser');
-const path = require('path');
 var telegraf = require ('telegraf');
 const bot = new telegraf(process.env.TOKEN);
-const con = require('./config/db');
-
+const con = require('./db.js');
 
 
 
@@ -30,9 +29,9 @@ app.use(body.urlencoded({extended: false}));
 app.use(body.json());
 
 app.get("/", req => req.res.send("ok"))
-app.use("/login", express.static(path.join(__dirname, "login")));
+app.use("/login", req => req.res.sendFile(path.join(__dirname, "./www/login.html")));
 
-app.use("/admin", auth, express.static(path.join(__dirname, "admin")));
+app.use("/admin", auth, req => req.res.sendFile(path.join(__dirname, "./www/admin.html")));
 
 app.post("/login", auth, req => req.res.json({status: 1}));
 
@@ -43,10 +42,24 @@ app.post("/changePassword", auth, (req, res) => {
   // TODO telegram notify admin that password has changed
 })
 
+
+var formidable = require('formidable'),
+    http = require('http'),
+    util = require('util');
+ 
 app.post("/file", auth, (req, res) => {
   // upload the file and tags
   // save the file and rename
   // add to db
+  //-------
+  // parse a file upload
+  var form = new formidable.IncomingForm();
+ 
+  form.parse(req, function(err, fields, files) {
+    res.writeHead(200, {'content-type': 'text/plain'});
+    res.write('received upload:\n\n');
+    res.end(util.inspect({fields: fields, files: files}));
+  });
 })
 
 app.get("/files", auth, (req, res) => {
