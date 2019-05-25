@@ -5,22 +5,22 @@ const express = require('express');
 const path = require('path')
 const body = require('body-parser');
 var telegraf = require ('telegraf');
-const bot = new telegraf(process.env.TOKEN);
+// const bot = new telegraf(process.env.TOKEN);
 const con = require('./db.js');
 
 
 
-bot.start((ctx)=> ctx.reply(`به بات جستجوی جزوه خوش آمدید, کلیدواژه های خود را وارد کرده
-                             تا جزوه مورد نظر خود را برای خرید پیدا کنید!
-                            `))
-bot.help(function(ctx){
-  ctx.reply(`به عنوان مثال :
-  دین و زندگی یازدهم`)
+// bot.start((ctx)=> ctx.reply(`به بات جستجوی جزوه خوش آمدید, کلیدواژه های خود را وارد کرده
+//                              تا جزوه مورد نظر خود را برای خرید پیدا کنید!
+//                             `))
+// bot.help(function(ctx){
+//   ctx.reply(`به عنوان مثال :
+//   دین و زندگی یازدهم`)
 
-})
-bot.startPolling()
-//launch server
-bot.launch();
+// })
+// bot.startPolling()
+// //launch server
+// bot.launch();
 
 const app = express();
 
@@ -46,19 +46,32 @@ app.post("/changePassword", auth, (req, res) => {
 var formidable = require('formidable'),
     http = require('http'),
     util = require('util');
- 
-app.post("/file", auth, (req, res) => {
-  // upload the file and tags
-  // save the file and rename
-  // add to db
-  //-------
-  // parse a file upload
+    
+app.post("/file", (req, res) => {
+
   var form = new formidable.IncomingForm();
- 
+  form.uploadDir = "./files/";
+  form.keepExtensions = true;
   form.parse(req, function(err, fields, files) {
-    res.writeHead(200, {'content-type': 'text/plain'});
-    res.write('received upload:\n\n');
-    res.end(util.inspect({fields: fields, files: files}));
+    if(fields.password == PASSWORD) {
+      con.query("INSERT INTO files(name, amount, desc) VALUES(?,?,?)", [files.file.name, parseInt(fields.amount), fields.desc], (err, row)=>{
+        if(err){
+          res.status(500).end("Internal Server Error!")
+        } else{
+          for(var tag of fields.tags.split(",")){
+            con.query("INSERT INTO tags(files_id,tag) VALUES(?,?)", [], (err, row)=>{
+              if(err){
+                res.status(500).end("Internal Server Error!")
+              }else{
+                res.redirect(`/admin?p=${PASSWORD}`)
+              }
+            })
+          }
+        }
+      })
+    } else{
+      res.redirect("/login")
+    }
   });
 })
 
@@ -175,11 +188,13 @@ app.listen(process.env.PORT);
 
 // TODO use passport
 function auth(req, res, next) {
-  if(req.body && req.body.password === PASSWORD) {
-    next();
-  } else if(req.query && req.query.p === PASSWORD) {
-    next();
+
+  if(req.body && req.body.password === PASSWORD) { // for POSTs
+    return next();
+  } else if(req.query && req.query.p === PASSWORD) { // for GETs
+    return next();
   } else {
     res.redirect("/login")
   }
+  
 }
