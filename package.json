@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "nodemon app.js"
+    "dev": "DB_HOST=localhost DB_NAME=kheibot DB_USER=root DB_PASS=root PORT=3000 nodemon app.js"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
