@@ -94,10 +94,10 @@ app.get("/file/:fid/:uid", (req, res) => {
           
           request(options, function (error, response, body) {
             if (error) {
-              console.log(error)
+              // console.log(error)
               res.send("به درگاه متصل نشد!")
             } else{
-              console.log(body.error_message)
+              // console.log(body.error_message)
               if(body.error_code) res.send("به درگاه متصل نشد!")
               else{
                 con.query("INSERT INTO transactions(id, order_id, amount, verify) VALUES(?,?,?,?) ", [body.id, order_id, row[0].amount, 0], (err, row)=>{
