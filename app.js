@@ -68,7 +68,7 @@ app.get("/file/:fid/:uid", (req, res) => {
             headers: {
               'Content-Type': 'application/json',
               'X-API-KEY': process.env.APITOKEN,
-              'X-SANDBOX': 1,
+              'X-SANDBOX': 1, // TODO
             },
             body: {
               'order_id': order_id,
@@ -98,7 +98,7 @@ app.get("/file/:fid/:uid", (req, res) => {
             }
          })
         } else{
-          res.status(404).send("فایل پیدا نشد")
+          res.status(404).send("فایلی پیدا نشد")
         }
       })
     }
@@ -112,7 +112,7 @@ app.get("/callback", (req, res)=>{
 // bank <-> idpay <-> we ..... :)
 app.post("/callback", (req, res) => {
   // console.log(req.body.status)
-  if(req.body.status == 10){
+  if(req.body.status == 100){
       
       const bodyit = {
         'id': req.body.id,
@@ -125,7 +125,7 @@ app.post("/callback", (req, res) => {
         headers: {
           'Content-Type': 'application/json',
           'X-API-KEY': process.env.APITOKEN,
-          'X-SANDBOX': 1,
+          'X-SANDBOX': 1, // TODO
         },
         body: bodyit,
         json: true,
