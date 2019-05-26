@@ -15,7 +15,11 @@ const con = require('./config/db');
 bot.start((ctx)=> ctx.reply(`به بات جستجوی جزوه خوش آمدید, کلیدواژه های خود را وارد کرده
                              تا جزوه مورد نظر خود را برای خرید پیدا کنید!
                             `))
+bot.help(function(ctx){
+  ctx.reply(`به عنوان مثال :
+  دین و زندگی یازدهم`)
 
+})
 bot.startPolling()
 //launch server
 bot.launch();
