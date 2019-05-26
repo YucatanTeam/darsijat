@@ -9,28 +9,8 @@ const TelegrafInlineMenu = require('telegraf-inline-menu')
 const bot = new telegraf(process.env.TOKEN);
 const con = require('./config/db');
 
-const mainMenu = new TelegrafInlineMenu(ctx => `سلام ${ctx.message.from.username}!`)
-const fooMenu = new TelegrafInlineMenu('Foo Menu')
-const barMenu = new TelegrafInlineMenu('Bar Menu')
-mainMenu.setCommand('start')
-mainMenu.submenu('Open Foo Menu', 'foo', fooMenu)
-fooMenu.submenu('Open Bar Menu', 'bar', barMenu)
-barMenu.simpleButton('Hit me', 'something', {
-  doFunc: ctx => ctx.reply('As am I!')
-})
 
-bot.use(mainMenu.init())
-bot.use(session({
-    getSessionKey: (ctx) => {
-      if (ctx.from && ctx.chat) {
-        return `${ctx.from.id}:${ctx.chat.id}`
-      } else if (ctx.from && ctx.inlineQuery) {
-        return `${ctx.from.id}:${ctx.from.id}`
-      }
-      return null
-    }
-  }
-))
+
 
 bot.start((ctx)=> ctx.reply(`به بات جستجوی جزوه خوش آمدید, کلیدواژه های خود را وارد کرده
                              تا جزوه مورد نظر خود را برای خرید پیدا کنید!
@@ -48,8 +28,11 @@ app.use(body.json());
 
 app.get("/", req => req.res.send("ok"))
 app.use("/login", express.static(path.join(__dirname, "login")));
+
 app.use("/admin", auth, express.static(path.join(__dirname, "admin")));
+
 app.post("/login", auth, req => req.res.json({status: 1}));
+
 app.post("/changePassword", auth, (req, res) => {
   PASSWORD = req.body.newpassword;
   // TODO update password.json
