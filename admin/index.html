@@ -7,9 +7,42 @@
     <title>admin panel</title>
 </head>
 <body>
-    <h3>add file :</h3>
-    <h3>files :</h3>
-    <h3>payments :</h3>
-    <h4>change password :</h4>
+    <br><br><h3>add file :</h3>
+    <form action="/file" method="POST">
+        <span>file :</span>
+        <input type="file" name="file" id="file">
+        <br>
+        <span>tags :</span>
+        <input type="text" name="tags" id="tags">
+        <br>
+        <input type="submit" value="upload">
+    </form>
+    <br><h3>files :</h3>
+        <input type="button" value="refresh" onclick="refreshFilesList()">
+        <table style="border:1px solid black">
+            <tr><th>name</th><th>tags</th><th>actions</th></tr>
+        </table>
+        <script>
+            function refreshFilesList() {
+                fetch("/files" + location.search).then(res => {
+                    if(res.redirected) {
+                        window.location.href = "/admin";
+                    }
+                }).then(res => res.json()).then(files => {
+                    console.log(files);
+                    // TODO add to table
+                })
+            }
+        </script>
+    <br><h4>change password :</h4>
+    <form action="/changePassword" method="post">
+        <span>old password :</span>
+        <input type="password" name="password" id="password">
+        <br>
+        <span>new password :</span>
+        <input type="password" name="newpassword" id="newpassword">
+        <br>
+        <input type="submit" value="update">
+    </form>
 </body>
 </html>
