@@ -2,12 +2,11 @@ require('dotenv').config()
 
 var request = require('request');
 const express = require('express');
+const path = require('path')
 const body = require('body-parser');
-const path = require('path');
 var telegraf = require ('telegraf');
 const bot = new telegraf(process.env.TOKEN);
-const con = require('./config/db');
-
+const con = require('./db.js');
 
 
 
@@ -30,9 +29,9 @@ app.use(body.urlencoded({extended: false}));
 app.use(body.json());
 
 app.get("/", req => req.res.send("ok"))
-app.use("/login", express.static(path.join(__dirname, "login")));
+app.use("/login", req => req.res.sendFile(path.join(__dirname, "./www/login.html")));
 
-app.use("/admin", auth, express.static(path.join(__dirname, "admin")));
+app.use("/admin", auth, req => req.res.sendFile(path.join(__dirname, "./www/admin.html")));
 
 app.post("/login", auth, req => req.res.json({status: 1}));
 
