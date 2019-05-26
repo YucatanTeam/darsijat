@@ -5,22 +5,36 @@ const express = require('express');
 const path = require('path')
 const body = require('body-parser');
 var telegraf = require ('telegraf');
-// const bot = new telegraf(process.env.TOKEN);
+const bot = new telegraf(process.env.TOKEN);
 const con = require('./db.js');
+const fs = require('fs')
+const tlg = require('telegraf/telegram')
 
 
 
-// bot.start((ctx)=> ctx.reply(`به بات جستجوی جزوه خوش آمدید, کلیدواژه های خود را وارد کرده
-//                              تا جزوه مورد نظر خود را برای خرید پیدا کنید!
-//                             `))
-// bot.help(function(ctx){
-//   ctx.reply(`به عنوان مثال :
-//   دین و زندگی یازدهم`)
+ bot.start((ctx)=> ctx.reply(`به بات جستجوی جزوه خوش آمدید, کلیدواژه های خود را وارد کرده
+                              تا جزوه مورد نظر خود را برای خرید پیدا کنید!
+                             `))
 
-// })
-// bot.startPolling()
-// //launch server
-// bot.launch();
+bot.on("text",function(ctx){
+  var msg = ctx.message.text
+  if(msg[0] != "/"){
+  ctx.reply("ina")
+    con.query(`SELECT files.* FROM tags,files WHERE tags.files_id = files.id AND tags.tag LIKE ?`,[msg],function(err,rows){
+      if(err){
+        console.log(err)
+      }
+      else{
+          for (var row of rows) {
+          ctx.reply(`${process.env.HOST}/file/${row.id}/${ctx.message.from.id}`)
+        }
+      }
+    })
+  }
+})
+ bot.startPolling()
+ //launch server
+ bot.launch();
 
 const app = express();
 
@@ -28,7 +42,9 @@ var PASSWORD = require("./password.json");
 app.use(body.urlencoded({extended: false}));
 app.use(body.json());
 
-app.get("/", req => req.res.send("ok"))
+app.get("/", function(req,res){
+  res.send("ok ")
+})
 app.use("/login", req => req.res.sendFile(path.join(__dirname, "./www/login.html")));
 
 app.use("/admin", auth, req => req.res.sendFile(path.join(__dirname, "./www/admin.html")));
@@ -54,19 +70,27 @@ app.post("/file", (req, res) => {
   form.keepExtensions = true;
   form.parse(req, function(err, fields, files) {
     if(fields.password == PASSWORD) {
-      con.query("INSERT INTO files(name, amount, desc) VALUES(?,?,?)", [files.file.name, parseInt(fields.amount), fields.desc], (err, row)=>{
+      con.query("INSERT INTO files (name, amount, descr) VALUES(?, ?, ?)", [path.basename(files.file.path), parseInt(fields.amount), fields.desc], (err, row)=>{
         if(err){
           res.status(500).end("Internal Server Error!")
-        } else{
+        } else {
+          var fine = true;
+          // TODO use mysql stmt syntax instead of for
           for(var tag of fields.tags.split(",")){
-            con.query("INSERT INTO tags(files_id,tag) VALUES(?,?)", [], (err, row)=>{
-              if(err){
-                res.status(500).end("Internal Server Error!")
-              }else{
-                res.redirect(`/admin?p=${PASSWORD}`)
+            con.query("INSERT INTO tags(files_id, tag) VALUES(?, ?)", [row.insertId, tag], (err, row) => {
+              if(err) {
+                console.log(err)
+                fine = false;
+              } else {
+                console.log("done", tag)
               }
             })
           }
+          setTimeout(e => {
+            res.send(fine ?
+              "<head><title>done</title><head><p>Done. go to <a href='/admin'>admin panel</a></p" :
+              "<head><title>error</title><head><p>Error. go to <a href='/admin'>admin panel</a></p>");
+          }, 2000);
         }
       })
     } else{
@@ -76,7 +100,40 @@ app.post("/file", (req, res) => {
 })
 
 app.get("/files", auth, (req, res) => {
-  // list of all files
+  con.query("SELECT * FROM files", (err, files) => {
+    if(err) {
+      res.status(500).json({})
+    } else {
+      con.query("SELECT * FROM tags", (err, tags) => {
+        if(err) {
+          return res.status(500).json({});
+        }
+        for(var file of files) {
+          file.tags = tags.filter(tag => tag.files_id == file.id);
+        }
+        return res.json(files);
+      })
+    }
+  })
+})
+
+app.get("/delete/:id", auth, (req, res) => {
+  const id = req.params.id;
+  con.query("DELETE FROM tags WHERE files_id = ?", [id], (err, row) => {
+    if(err) {
+      console.log(err)
+      res.send("<head><title>error</title><head><p>Error. go to <a href='/admin'>admin panel</a></p>")
+    } else {
+      con.query("DELETE FROM files WHERE id = ?", [id], (err, row) => {
+        if(err) {
+          console.log(err)
+          res.send("<head><title>error</title><head><p>Error. go to <a href='/admin'>admin panel</a></p>")
+        } else {
+          res.send("<head><title>done</title><head><p>Done. go to <a href='/admin'>admin panel</a></p>")
+        }
+      })
+    }
+  })
 })
 
 app.get("/file/:fid/:uid", (req, res) => {
@@ -164,7 +221,21 @@ app.post("/callback", (req, res) => {
           if(body.error_code){
             res.end()
           } else {
-            // TODO
+            // sendig file here
+            con.query(`SELECT * FROM files WHERE id = ?`, [body.order_id.split(".")[0]],function(err,rows){
+              if(err){
+                console.log(err)
+              }
+              else{
+                const file = fs.readFileSync(`./files/${rows[0].name}`);
+                bot.telegram.sendDocument(body.order_id.split(".")[1],{
+                  source: file,
+                  filename: `${rows[0].desc}.pdf`
+                },[{caption:`${body.track_id}`}]).catch(console.log);
+              }
+            })
+
+            //end
             console.log("bot send file with track_id and other infos...")
             con.query("UPDATE transactions SET status = ?, track_id = ?, card_no = ?, hash_card_no = ?, date = ?, verify = ? WHERE order_id = ?",
             [body.status, body.track_id+"."+body.payment.track_id,body.payment.card_no, body.payment.hash_card_no, body.verify.date, 1, req.body.order_id], (err, row)=>{
