@@ -42,10 +42,24 @@ app.post("/changePassword", auth, (req, res) => {
   // TODO telegram notify admin that password has changed
 })
 
+
+var formidable = require('formidable'),
+    http = require('http'),
+    util = require('util');
+ 
 app.post("/file", auth, (req, res) => {
   // upload the file and tags
   // save the file and rename
   // add to db
+  //-------
+  // parse a file upload
+  var form = new formidable.IncomingForm();
+ 
+  form.parse(req, function(err, fields, files) {
+    res.writeHead(200, {'content-type': 'text/plain'});
+    res.write('received upload:\n\n');
+    res.end(util.inspect({fields: fields, files: files}));
+  });
 })
 
 app.get("/files", auth, (req, res) => {
