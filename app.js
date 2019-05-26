@@ -1,6 +1,7 @@
 require('dotenv').config()
 
 const express = require('express');
+const body = require('body-parser');
 const path = require('path');
 var telegraf = require ('telegraf');
 const bot = new telegraf(process.env.TOKEN);
@@ -29,15 +30,18 @@ bot.launch();
 
 const app = express();
 
-const USERNAME = process.env.USERNAME;
-var PASSWORD = process.env.PASSWORD;
+var PASSWORD = require("./password.json");
+app.use(body.urlencoded({extended: false}));
+app.use(body.json());
 
-app.get("/admin", auth, express.static(path.join(__dirname, "admin")));
-app.get("/login", express.static(path.join(__dirname, "login")));
+app.get("/", req => req.res.send("ok"))
+app.use("/login", express.static(path.join(__dirname, "login")));
+app.use("/admin", auth, express.static(path.join(__dirname, "admin")));
 app.post("/login", auth, req => req.res.json({status: 1}));
-app.post("/changePassword", auth, req => {
+app.post("/changePassword", auth, (req, res) => {
   PASSWORD = req.body.newpassword;
-  req.res.json({status: 1});
+  // TODO update password.json
+  res.redirect("/login");
   // TODO telegram notify admin that password has changed
 })
 
@@ -69,9 +73,9 @@ app.listen(process.env.PORT);
 
 // TODO use passport
 function auth(req, res, next) {
-  if(req.body.username === USERNAME && req.body.password === PASSWORD) {
+  if(req.body && req.body.password === PASSWORD) {
     next();
-  } else if(req.query.u === USERNAME && req.query.p === PASSWORD) {
+  } else if(req.query && req.query.p === PASSWORD) {
     next();
   } else {
     res.redirect("/login")
