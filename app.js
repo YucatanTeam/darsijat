@@ -20,9 +20,9 @@ bot.use(session({
   }
 ))
 
-bot.start((ctx)=>{
-  ctx.reply('Welcome')
-});
+bot.start((ctx)=> ctx.reply(`به بات جستجوی جزوه خوش آمدید, کلیدواژه های خود را وارد کرده
+                             تا جزوه مورد نظر خود را برای خرید پیدا کنید!
+                            `))
 
 bot.startPolling()
 //launch server
