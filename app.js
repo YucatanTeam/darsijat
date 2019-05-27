@@ -52,10 +52,28 @@ app.use("/admin", auth, req => req.res.sendFile(path.join(__dirname, "./www/admi
 app.post("/login", auth, req => req.res.json({status: 1}));
 
 app.post("/changePassword", auth, (req, res) => {
-  PASSWORD = req.body.newpassword;
-  // TODO update password.json
-  res.redirect("/login");
-  // TODO telegram notify admin that password has changed
+  OLDPASSWORD = req.body.password
+  NEWPASSWORD = req.body.newpassword;
+
+  if(OLDPASSWORD === PASSWORD){ // BUG ... will restart the server!!!
+      fs.writeFile ("./password.json", JSON.stringify(NEWPASSWORD), (err) => {
+        if (err){
+          res.send("can't change the password")
+        } else{
+          const file = fs.readFileSync('./password.json');
+                bot.telegram.sendDocument(process.env.ADMIN_CHAT_ID,{
+                  source: file,
+                  filename: "new admin password"
+                },[]).catch(console.log);
+          res.redirect("/login");
+        }
+      }
+    );
+  } else{
+    setTimeout(e => {
+      res.send("<head><title>password error</title><head><p>old password required. go to <a href='/admin'>admin panel</a></p>");
+    }, 2000);
+  }
 })
 
 
@@ -137,7 +155,7 @@ app.get("/delete/:id", auth, (req, res) => {
 })
 
 app.get("/file/:fid/:uid", (req, res) => {
-  con.query("SELECT * FROM transactions WHERE order_id = ? AND verify = ?", [`${req.params.fid}.${req.params.uid}`, 0], (err, row)=>{
+  con.query("SELECT * FROM transactions WHERE order_id LIKE CONCAT(?, '.%') AND verify = ?", [`${req.params.fid}.${req.params.uid}`, 1], (err, row)=>{
     if(row.length){
       // TODO
       console.log("send file to user from bot without payment process...")
@@ -156,7 +174,7 @@ app.get("/file/:fid/:uid", (req, res) => {
             body: {
               'order_id': order_id,
               'amount': row[0].amount,
-              'desc': row[0].desc,
+              'desc': row[0].descr,
               'callback': `${process.env.HOST}/callback/`,
             },
             json: true,
@@ -230,13 +248,12 @@ app.post("/callback", (req, res) => {
                 const file = fs.readFileSync(`./files/${rows[0].name}`);
                 bot.telegram.sendDocument(body.order_id.split(".")[1],{
                   source: file,
-                  filename: `${rows[0].desc}.pdf`
+                  filename: `${rows[0].descr}.pdf`
                 },[{caption:`${body.track_id}`}]).catch(console.log);
               }
             })
 
             //end
-            console.log("bot send file with track_id and other infos...")
             con.query("UPDATE transactions SET status = ?, track_id = ?, card_no = ?, hash_card_no = ?, date = ?, verify = ? WHERE order_id = ?",
             [body.status, body.track_id+"."+body.payment.track_id,body.payment.card_no, body.payment.hash_card_no, body.verify.date, 1, req.body.order_id], (err, row)=>{
               if(err) {
