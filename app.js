@@ -1,6 +1,7 @@
 require('dotenv').config()
 
 var request = require('request');
+var formidable = require('formidable')
 const express = require('express');
 const path = require('path')
 const body = require('body-parser');
@@ -10,22 +11,24 @@ const con = require('./db.js');
 const fs = require('fs')
 
 
- bot.start((ctx)=> ctx.reply(`به بات جستجوی جزوه خوش آمدید, کلیدواژه های خود را وارد کرده
+ bot.start((ctx)=> ctx.reply(`به بات جستجوی جزوه خوش آمدید,
+                               کلیدواژه های خود را وارد کرده
                               تا جزوه مورد نظر خود را برای خرید پیدا کنید!
                              `))
 
 bot.on("text",function(ctx){
   var msg = ctx.message.text
   if(msg[0] != "/"){
-  ctx.reply("ina")
     con.query(`SELECT files.* FROM tags,files WHERE tags.files_id = files.id AND tags.tag LIKE ?`,[msg],function(err,rows){
       if(err){
         console.log(err)
-      }
-      else{
-          for (var row of rows) {
+      } else if(rows.length){
+        ctx.reply(`${rows.length} جزوه یافت شد`)
+        for (var row of rows) {
           ctx.reply(`${process.env.HOST}/file/${row.id}/${ctx.message.from.id}`)
         }
+      } else{
+        ctx.reply("جزوه ای یافت نشد!")
       }
     })
   }
@@ -55,7 +58,9 @@ app.post("/changePassword", auth, (req, res) => {
   if(OLDPASSWORD === PASSWORD){ // BUG ... will restart the server!!!
       fs.writeFile ("./password.json", JSON.stringify(NEWPASSWORD), (err) => {
         if (err){
-          res.send("can't change the password")
+          setTimeout(e => {
+            res.send("<head><title>password error</title><head><p>can't change. go to <a href='/admin'>admin panel</a></p>");
+          }, 2000);
         } else{
           const file = fs.readFileSync('./password.json');
                 bot.telegram.sendDocument(process.env.ADMIN_CHAT_ID,{
@@ -74,9 +79,6 @@ app.post("/changePassword", auth, (req, res) => {
 })
 
 
-var formidable = require('formidable'),
-    http = require('http'),
-    util = require('util');
     
 app.post("/file", (req, res) => {
 
@@ -142,10 +144,23 @@ app.get("/delete/:id", auth, (req, res) => {
 })
 
 app.get("/file/:fid/:uid", (req, res) => {
-  con.query("SELECT * FROM transactions WHERE order_id LIKE CONCAT(?, '.%') AND verify = ?", [`${req.params.fid}.${req.params.uid}`, 1], (err, row)=>{
-    if(row.length){
-      // TODO
-      console.log("send file to user from bot without payment process...")
+  const q = `SELECT * FROM transactions WHERE order_id LIKE CONCAT(${req.params.fid}.${req.params.uid}, '.%') AND verify = ${1}`
+  con.query(q, (err, tr)=>{
+    if(tr.length){
+      // send the file to user without payment process
+      const file_id = req.params.fid
+      con.query("SELECT * FROM files WHERE id = ?", [file_id], (err, fi)=>{
+        if(fi.length){
+          const chat_id = req.params.uid
+          const file = fs.readFileSync(`./files/${fi[0].name}`);
+            bot.telegram.sendDocument(chat_id,{
+              source: file,
+              filename: `${fi[0].descr}.pdf`
+            },[{caption:`${tr.track_id}`}]).catch(console.log);
+        } else{
+          res.status(404).send("فایل مورد نظر یافت نشد!")
+        }
+      })
     } else { // payment process
       con.query("SELECT * FROM files WHERE id = ? ", [req.params.fid], (err, row)=>{
         if(row.length){
@@ -186,7 +201,7 @@ app.get("/file/:fid/:uid", (req, res) => {
             }
          })
         } else{
-          res.status(404).send("فایلی پیدا نشد")
+          res.status(404).send("فایل مورد نظر یافت نشد!")
         }
       })
     }
@@ -242,8 +257,9 @@ app.post("/callback", (req, res) => {
             con.query("UPDATE transactions SET status = ?, track_id = ?, card_no = ?, hash_card_no = ?, date = ?, verify = ? WHERE order_id = ?",
             [body.status, body.track_id+"."+body.payment.track_id,body.payment.card_no, body.payment.hash_card_no, body.verify.date, 1, req.body.order_id], (err, row)=>{
               if(err) {
-                // TODO
-                console.log("bot tell khei to pm to dev")
+                telegram.sendMessage(process.env.ADMIN_CHAT_ID, 
+                  "مشکلی در سرور پیش آمده است , لطفا با تیم اجرایی تماس بگیرید!"
+                  ).catch(console.log)
               }
               res.end()
               // console.log(row)
@@ -259,7 +275,6 @@ app.post("/callback", (req, res) => {
 
 app.listen(process.env.PORT);
 
-// TODO use passport
 function auth(req, res, next) {
 
   if(req.body && req.body.password === PASSWORD) { // for POSTs
