@@ -30,9 +30,10 @@ bot.on("text",function(ctx){
     })
   }
 })
-//  bot.startPolling()
-//  //launch server
-//  bot.launch();
+
+bot.startPolling()
+//launch server
+bot.launch();
 
 const app = express();
 
@@ -40,9 +41,7 @@ var PASSWORD = require("./password.json");
 app.use(body.urlencoded({extended: false}));
 app.use(body.json());
 
-app.get("/", function(req,res){
-  res.send("ok ")
-})
+app.get("/", req => req.res.redirect(`t.me/${process.env.BOT_NAME}`))
 app.use("/login", req => req.res.sendFile(path.join(__dirname, "./www/login.html")));
 
 app.use("/admin", auth, req => req.res.sendFile(path.join(__dirname, "./www/admin.html")));

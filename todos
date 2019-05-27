@@ -1,0 +1,18 @@
+done
+
+bot tell khei to pm dev
+
+X-SANDBOX : 0 for production. add a condition to use env var
+
+
+126 // TODO
+127 console.log("send file to user from bot without payment process...")
+
+
+fix the upload route
+
+update password.json at password change
+
+done
+
+improve bot's tag search algorithm
