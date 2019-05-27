@@ -8,8 +8,6 @@ var telegraf = require ('telegraf');
 const bot = new telegraf(process.env.TOKEN);
 const con = require('./db.js');
 const fs = require('fs')
-const tlg = require('telegraf/telegram')
-
 
 
  bot.start((ctx)=> ctx.reply(`به بات جستجوی جزوه خوش آمدید, کلیدواژه های خود را وارد کرده
@@ -32,9 +30,10 @@ bot.on("text",function(ctx){
     })
   }
 })
- bot.startPolling()
- //launch server
- bot.launch();
+
+bot.startPolling()
+//launch server
+bot.launch();
 
 const app = express();
 
@@ -42,9 +41,7 @@ var PASSWORD = require("./password.json");
 app.use(body.urlencoded({extended: false}));
 app.use(body.json());
 
-app.get("/", function(req,res){
-  res.send("ok ")
-})
+app.get("/", req => req.res.redirect(`t.me/${process.env.BOT_NAME}`))
 app.use("/login", req => req.res.sendFile(path.join(__dirname, "./www/login.html")));
 
 app.use("/admin", auth, req => req.res.sendFile(path.join(__dirname, "./www/admin.html")));
@@ -92,23 +89,10 @@ app.post("/file", (req, res) => {
         if(err){
           res.status(500).end("Internal Server Error!")
         } else {
-          var fine = true;
-          // TODO use mysql stmt syntax instead of for
-          for(var tag of fields.tags.split(",")){
-            con.query("INSERT INTO tags(files_id, tag) VALUES(?, ?)", [row.insertId, tag], (err, row) => {
-              if(err) {
-                console.log(err)
-                fine = false;
-              } else {
-                console.log("done", tag)
-              }
-            })
-          }
-          setTimeout(e => {
-            res.send(fine ?
-              "<head><title>done</title><head><p>Done. go to <a href='/admin'>admin panel</a></p" :
-              "<head><title>error</title><head><p>Error. go to <a href='/admin'>admin panel</a></p>");
-          }, 2000);
+          const query = `INSERT INTO tags(files_id, tag) VALUES ${fields.tags.split(",").map(tag => `(${row.insertId},${con.escape(tag)})`).join(',')}`;
+          con.query(query, (err, row) => {
+            res.send(`<head><title>${err ? "Error" : "Done"}</title><head><p>${err ? "Error" : "Done"}. go to <a href='/admin'>admin panel</a></p>`)
+          })
         }
       })
     } else{
@@ -142,13 +126,16 @@ app.get("/delete/:id", auth, (req, res) => {
       console.log(err)
       res.send("<head><title>error</title><head><p>Error. go to <a href='/admin'>admin panel</a></p>")
     } else {
-      con.query("DELETE FROM files WHERE id = ?", [id], (err, row) => {
-        if(err) {
-          console.log(err)
-          res.send("<head><title>error</title><head><p>Error. go to <a href='/admin'>admin panel</a></p>")
-        } else {
-          res.send("<head><title>done</title><head><p>Done. go to <a href='/admin'>admin panel</a></p>")
-        }
+      con.query("SELECT * FROM files WHERE id = ?", [id], (err, row) => {
+        con.query("DELETE FROM files WHERE id = ?", [id], (err, arow) => {
+          if(err) {
+            console.log(err)
+            res.send("<head><title>error</title><head><p>Error. go to <a href='/admin'>admin panel</a></p>")
+          } else {
+            fs.unlinkSync(path.join(__dirname, "./files/" + row[0].name));
+            res.send("<head><title>done</title><head><p>Done. go to <a href='/admin'>admin panel</a></p>")
+          }
+        })
       })
     }
   })
@@ -206,9 +193,7 @@ app.get("/file/:fid/:uid", (req, res) => {
   })
 })
 
-app.get("/callback", (req, res)=>{
-    console.log("redirect to bot..")
-})
+app.get("/callback", req => req.res.redirect(`t.me/${process.env.BOT_NAME}`));
 
 // bank <-> idpay <-> we ..... :)
 app.post("/callback", (req, res) => {
