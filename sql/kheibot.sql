@@ -10,7 +10,7 @@ CREATE TABLE `files` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `name` text COLLATE utf8_persian_ci NOT NULL,
   `amount` int(11) NOT NULL,
-  `desc` text COLLATE utf8_persian_ci NOT NULL,
+  `descr` text COLLATE utf8_persian_ci NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
 

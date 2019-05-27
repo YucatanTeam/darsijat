@@ -97,7 +97,7 @@
                     console.log(files);
                     var html = "<tr><th>file</th><th>price</th><th>tags</th><th>delete</th></tr>";
                     for(var file of files) {
-                        html += `<tr><td>${file.desc}</td><td>${file.amount}</td><td>${file.tags.map(t => t.tag).join(",")}</td><td><a onclick="deleteFile(${file.id})">x</a></td></tr>`
+                        html += `<tr><td>${file.descr}</td><td>${file.amount}</td><td>${file.tags.map(t => t.tag).join(",")}</td><td><a onclick="deleteFile(${file.id})">x</a></td></tr>`
                     }
                     document.getElementById('files').innerHTML = html;
                 }).catch(err => alert("error"));

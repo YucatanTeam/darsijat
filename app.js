@@ -54,19 +54,27 @@ app.post("/file", (req, res) => {
   form.keepExtensions = true;
   form.parse(req, function(err, fields, files) {
     if(fields.password == PASSWORD) {
-      con.query("INSERT INTO files(name, amount, desc) VALUES(?,?,?)", [files.file.name, parseInt(fields.amount), fields.desc], (err, row)=>{
+      con.query("INSERT INTO files (name, amount, descr) VALUES(?, ?, ?)", [path.basename(files.file.path), parseInt(fields.amount), fields.desc], (err, row)=>{
         if(err){
           res.status(500).end("Internal Server Error!")
-        } else{
+        } else {
+          var fine = true;
+          // TODO use mysql stmt syntax instead of for
           for(var tag of fields.tags.split(",")){
-            con.query("INSERT INTO tags(files_id,tag) VALUES(?,?)", [], (err, row)=>{
-              if(err){
-                res.status(500).end("Internal Server Error!")
-              }else{
-                res.redirect(`/admin?p=${PASSWORD}`)
+            con.query("INSERT INTO tags(files_id, tag) VALUES(?, ?)", [row.insertId, tag], (err, row) => {
+              if(err) {
+                console.log(err)
+                fine = false;
+              } else {
+                console.log("done", tag)
               }
             })
           }
+          setTimeout(e => {
+            res.send(fine ?
+              "<head><title>done</title><head><p>Done. go to <a href='/admin'>admin panel</a></p" :
+              "<head><title>error</title><head><p>Error. go to <a href='/admin'>admin panel</a></p>");
+          }, 2000);
         }
       })
     } else{
@@ -105,7 +113,7 @@ app.get("/delete/:id", auth, (req, res) => {
           console.log(err)
           res.send("<head><title>error</title><head><p>Error. go to <a href='/admin'>admin panel</a></p>")
         } else {
-          res.send("<head><title>error</title><head><p>Done. go to <a href='/admin'>admin panel</a></p>")
+          res.send("<head><title>done</title><head><p>Done. go to <a href='/admin'>admin panel</a></p>")
         }
       })
     }
