@@ -5,22 +5,22 @@ const express = require('express');
 const path = require('path')
 const body = require('body-parser');
 var telegraf = require ('telegraf');
-const bot = new telegraf(process.env.TOKEN);
+// const bot = new telegraf(process.env.TOKEN);
 const con = require('./db.js');
 
 
 
-bot.start((ctx)=> ctx.reply(`به بات جستجوی جزوه خوش آمدید, کلیدواژه های خود را وارد کرده
-                             تا جزوه مورد نظر خود را برای خرید پیدا کنید!
-                            `))
-bot.help(function(ctx){
-  ctx.reply(`به عنوان مثال :
-  دین و زندگی یازدهم`)
+// bot.start((ctx)=> ctx.reply(`به بات جستجوی جزوه خوش آمدید, کلیدواژه های خود را وارد کرده
+//                              تا جزوه مورد نظر خود را برای خرید پیدا کنید!
+//                             `))
+// bot.help(function(ctx){
+//   ctx.reply(`به عنوان مثال :
+//   دین و زندگی یازدهم`)
 
-})
-bot.startPolling()
-//launch server
-bot.launch();
+// })
+// bot.startPolling()
+// //launch server
+// bot.launch();
 
 const app = express();
 
@@ -46,19 +46,32 @@ app.post("/changePassword", auth, (req, res) => {
 var formidable = require('formidable'),
     http = require('http'),
     util = require('util');
+    
+app.post("/file", (req, res) => {
 
-app.post("/file", auth, (req, res) => {
-  // upload the file and tags
-  // save the file and rename
-  // add to db
-  //-------
-  // parse a file upload
   var form = new formidable.IncomingForm();
- 
+  form.uploadDir = "./files/";
+  form.keepExtensions = true;
   form.parse(req, function(err, fields, files) {
-    res.writeHead(200, {'content-type': 'text/plain'});
-    res.write('received upload:\n\n');
-    res.end(util.inspect({fields: fields, files: files}));
+    if(fields.password == PASSWORD) {
+      con.query("INSERT INTO files(name, amount, desc) VALUES(?,?,?)", [files.file.name, parseInt(fields.amount), fields.desc], (err, row)=>{
+        if(err){
+          res.status(500).end("Internal Server Error!")
+        } else{
+          for(var tag of fields.tags.split(",")){
+            con.query("INSERT INTO tags(files_id,tag) VALUES(?,?)", [], (err, row)=>{
+              if(err){
+                res.status(500).end("Internal Server Error!")
+              }else{
+                res.redirect(`/admin?p=${PASSWORD}`)
+              }
+            })
+          }
+        }
+      })
+    } else{
+      res.redirect("/login")
+    }
   });
 })
 
@@ -81,11 +94,20 @@ app.get("/files", auth, (req, res) => {
 })
 
 app.get("/delete/:id", auth, (req, res) => {
-  con.query("DELETE FROM tags WHERE files_id = ?; DELETE FROM files WHERE id = ?", [id, id], (err, row) => {
+  const id = req.params.id;
+  con.query("DELETE FROM tags WHERE files_id = ?", [id], (err, row) => {
     if(err) {
+      console.log(err)
       res.send("<head><title>error</title><head><p>Error. go to <a href='/admin'>admin panel</a></p>")
     } else {
-      res.send("<head><title>error</title><head><p>Done. go to <a href='/admin'>admin panel</a></p>")
+      con.query("DELETE FROM files WHERE id = ?", [id], (err, row) => {
+        if(err) {
+          console.log(err)
+          res.send("<head><title>error</title><head><p>Error. go to <a href='/admin'>admin panel</a></p>")
+        } else {
+          res.send("<head><title>error</title><head><p>Done. go to <a href='/admin'>admin panel</a></p>")
+        }
+      })
     }
   })
 })
@@ -105,7 +127,7 @@ app.get("/file/:fid/:uid", (req, res) => {
             headers: {
               'Content-Type': 'application/json',
               'X-API-KEY': process.env.APITOKEN,
-              'X-SANDBOX': 1,
+              'X-SANDBOX': 1, // TODO
             },
             body: {
               'order_id': order_id,
@@ -118,10 +140,10 @@ app.get("/file/:fid/:uid", (req, res) => {
           
           request(options, function (error, response, body) {
             if (error) {
-              console.log(error)
+              // console.log(error)
               res.send("به درگاه متصل نشد!")
             } else{
-              console.log(body.error_message)
+              // console.log(body.error_message)
               if(body.error_code) res.send("به درگاه متصل نشد!")
               else{
                 con.query("INSERT INTO transactions(id, order_id, amount, verify) VALUES(?,?,?,?) ", [body.id, order_id, row[0].amount, 0], (err, row)=>{
@@ -135,7 +157,7 @@ app.get("/file/:fid/:uid", (req, res) => {
             }
          })
         } else{
-          res.status(404).send("فایل پیدا نشد")
+          res.status(404).send("فایلی پیدا نشد")
         }
       })
     }
@@ -149,7 +171,7 @@ app.get("/callback", (req, res)=>{
 // bank <-> idpay <-> we ..... :)
 app.post("/callback", (req, res) => {
   // console.log(req.body.status)
-  if(req.body.status == 10){
+  if(req.body.status == 100){
       
       const bodyit = {
         'id': req.body.id,
@@ -162,7 +184,7 @@ app.post("/callback", (req, res) => {
         headers: {
           'Content-Type': 'application/json',
           'X-API-KEY': process.env.APITOKEN,
-          'X-SANDBOX': 1,
+          'X-SANDBOX': 1, // TODO
         },
         body: bodyit,
         json: true,
@@ -199,11 +221,13 @@ app.listen(process.env.PORT);
 
 // TODO use passport
 function auth(req, res, next) {
-  if(req.body && req.body.password === PASSWORD) {
-    next();
-  } else if(req.query && req.query.p === PASSWORD) {
-    next();
+
+  if(req.body && req.body.password === PASSWORD) { // for POSTs
+    return next();
+  } else if(req.query && req.query.p === PASSWORD) { // for GETs
+    return next();
   } else {
     res.redirect("/login")
   }
+  
 }

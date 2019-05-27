@@ -8,14 +8,24 @@
 </head>
 <body>
     <br><br><h3>add file :</h3>
-    <form action="/file" method="POST">
+    <form action="/file" method="POST" enctype="multipart/form-data">
+        <input type="password" name="password" id="filepsswd" hidden>
         <span>file :</span>
         <input type="file" name="file" id="file">
         <br>
         <span>tags :</span>
         <input type="text" name="tags" id="tags">
         <br>
+        <span>description :</span>
+        <input type="text" name="desc" id="desc">
+        <br>
+        <span>amount :</span>
+        <input type="text" name="amount" id="amount">
+        <br>
         <input type="submit" value="upload">
+        <script>
+            document.getElementById('filepsswd').value = location.search.split('?p=')[1]
+        </script>
     </form>
     <br><h3>files :</h3>
         <input type="button" value="refresh" onclick="refreshFilesList()">
