@@ -5,54 +5,122 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>admin panel</title>
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Ubuntu:regular,bold&subset=Latin">
+    <style>
+            @font-face {
+                font-family: 'Ubuntu';
+                font-style: normal;
+                font-weight: 400;
+                src: local('Ubuntu'), url(http://example.com/fonts/ubuntu.woff) format('woff');
+            }
+            .card {
+                padding: 2%;
+                margin: 2% 10% 2% 10%;
+                margin-top: 10px;
+                /* border : 1px solid rgb(61, 17, 97); */
+                border : 1px solid rgb(0, 0, 0);
+                border-radius: 10px;
+            }
+            input {
+                margin-bottom: 10px;
+                background-color: rgb(255, 255, 255);
+                width: 20%;
+                /* border: 1px solid rgb(61, 17, 97); */
+                border: 1px solid rgb(0, 0, 0);
+                border-radius: 10px;
+                /* color: rgb(117, 62, 161); */
+                color: rgb(0, 0, 0);
+                padding-top: 1%;
+                padding-bottom: 1%;
+                text-decoration: none;
+                margin-right: 1%;
+                cursor: pointer;
+            }
+            input[type=text], input[type=password], input[type=file] {
+                padding-top: 5px;
+                padding-bottom: 5px;
+                width: 30%;
+            }
+            input:hover {
+                transition-duration: 180ms;
+                background-color: rgb(210, 210, 210);
+            }
+            p.header {
+                /* color: rgb(69, 32, 94); */
+                font-family: verdana;
+                font-size: 150%;
+            }
+            body {
+                font-family: Ubuntu, "times new roman", times, roman, serif;
+                background-color: rgb(255, 255, 255);
+            }
+        </style>
 </head>
 <body>
-    <br><br><h3>add file :</h3>
-    <form action="/file" method="POST" enctype="multipart/form-data">
-        <input type="password" name="password" id="filepsswd" hidden>
-        <span>file :</span>
-        <input type="file" name="file" id="file">
-        <br>
-        <span>tags :</span>
-        <input type="text" name="tags" id="tags">
-        <br>
-        <span>description :</span>
-        <input type="text" name="desc" id="desc">
-        <br>
-        <span>amount :</span>
-        <input type="text" name="amount" id="amount">
-        <br>
-        <input type="submit" value="upload">
-        <script>
-            document.getElementById('filepsswd').value = location.search.split('?p=')[1]
-        </script>
-    </form>
-    <br><h3>files :</h3>
+    <br><br>
+    <div class="card">
+        <p class="header">add file :</p>
+        <form action="/file" method="POST" enctype="multipart/form-data">
+            <input type="password" name="password" id="filepsswd" hidden>
+            <span>file :</span>
+            <input type="file" name="file" id="file">
+            <br>
+            <span>tags :</span>
+            <input type="text" name="tags" id="tags">
+            <br>
+            <span>description :</span>
+            <input type="text" name="desc" id="desc">
+            <br>
+            <span>amount :</span>
+            <input type="text" name="amount" id="amount">
+            <br>
+            <input type="submit" value="upload">
+            <script>
+                document.getElementById('filepsswd').value = location.search.split('?p=')[1]
+            </script>
+        </form>
+    </div>
+    <br>
+    <div class="card">
+        <p class="header">files :</p>
         <input type="button" value="refresh" onclick="refreshFilesList()">
-        <table style="border:1px solid black">
-            <tr><th>name</th><th>tags</th><th>actions</th></tr>
+        <table style="border:1px solid black" id="files">
         </table>
         <script>
             function refreshFilesList() {
                 fetch("/files" + location.search).then(res => {
                     if(res.redirected) {
-                        window.location.href = "/admin";
+                        return window.location.href = "/admin";
                     }
+                    return res;
                 }).then(res => res.json()).then(files => {
                     console.log(files);
-                    // TODO add to table
-                })
+                    var html = "<tr><th>file</th><th>price</th><th>tags</th><th>delete</th></tr>";
+                    for(var file of files) {
+                        html += `<tr><td>${file.desc}</td><td>${file.amount}</td><td>${file.tags.map(t => t.tag).join(",")}</td><td><a onclick="deleteFile(${file.id})">x</a></td></tr>`
+                    }
+                    document.getElementById('files').innerHTML = html;
+                }).catch(err => alert("error"));
+            }
+            function deleteFile(id) {
+                if(confirm("all purchases for the file will be lost. Are you sure ?")) {
+                    location.href = `/delete/${id}/${location.search}`;
+                }
             }
         </script>
-    <br><h4>change password :</h4>
-    <form action="/changePassword" method="post">
-        <span>old password :</span>
-        <input type="password" name="password" id="password">
-        <br>
-        <span>new password :</span>
-        <input type="password" name="newpassword" id="newpassword">
-        <br>
-        <input type="submit" value="update">
-    </form>
+    </div>
+    <br>
+    <div class="card">
+        <p class="header">change password :</p>
+        <form action="/changePassword" method="post">
+            <span>old password :</span>
+            <input type="password" name="password" id="password">
+            <br>
+            <span>new password :</span>
+            <input type="password" name="newpassword" id="newpassword">
+            <br>
+            <input type="submit" value="update">
+        </form>
+    </div>
 </body>
 </html>
