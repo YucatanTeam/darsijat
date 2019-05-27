@@ -46,7 +46,7 @@ app.post("/changePassword", auth, (req, res) => {
 var formidable = require('formidable'),
     http = require('http'),
     util = require('util');
- 
+
 app.post("/file", auth, (req, res) => {
   // upload the file and tags
   // save the file and rename
@@ -63,7 +63,31 @@ app.post("/file", auth, (req, res) => {
 })
 
 app.get("/files", auth, (req, res) => {
-  // list of all files
+  con.query("SELECT * FROM files", (err, files) => {
+    if(err) {
+      res.status(500).json({})
+    } else {
+      con.query("SELECT * FROM tags", (err, tags) => {
+        if(err) {
+          return res.status(500).json({});
+        }
+        for(var file of files) {
+          file.tags = tags.filter(tag => tag.files_id == file.id);
+        }
+        return res.json(files);
+      })
+    }
+  })
+})
+
+app.get("/delete/:id", auth, (req, res) => {
+  con.query("DELETE FROM tags WHERE files_id = ?; DELETE FROM files WHERE id = ?", [id, id], (err, row) => {
+    if(err) {
+      res.send("<head><title>error</title><head><p>Error. go to <a href='/admin'>admin panel</a></p>")
+    } else {
+      res.send("<head><title>error</title><head><p>Done. go to <a href='/admin'>admin panel</a></p>")
+    }
+  })
 })
 
 app.get("/file/:fid/:uid", (req, res) => {

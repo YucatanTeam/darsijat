@@ -20,18 +20,26 @@
     <br><h3>files :</h3>
         <input type="button" value="refresh" onclick="refreshFilesList()">
         <table style="border:1px solid black">
-            <tr><th>name</th><th>tags</th><th>actions</th></tr>
+            <tr><th>file</th><th>price</th><th>tags</th><th>delete</th></tr>
         </table>
         <script>
             function refreshFilesList() {
                 fetch("/files" + location.search).then(res => {
                     if(res.redirected) {
-                        window.location.href = "/admin";
+                        return window.location.href = "/admin";
                     }
+                    return res;
                 }).then(res => res.json()).then(files => {
                     console.log(files);
-                    // TODO add to table
-                })
+                    for(var file of files) {
+                        var html = `<tr><td>${file.desc}</td><td>${file.amount}</td><td>${file.tags}</td><td><a onclick="deleteFile(${file.id})">x</a></td></tr>`
+                    }
+                }).catch(err => alert("error"));
+            }
+            function deleteFile(id) {
+                if(confirm("all purchases for the file will be lost. Are you sure ?")) {
+                    location.href = `/delete/${id}/${location.search}`;
+                }
             }
         </script>
     <br><h4>change password :</h4>
