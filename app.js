@@ -5,22 +5,36 @@ const express = require('express');
 const path = require('path')
 const body = require('body-parser');
 var telegraf = require ('telegraf');
-// const bot = new telegraf(process.env.TOKEN);
+const bot = new telegraf(process.env.TOKEN);
 const con = require('./db.js');
+const fs = require('fs')
+const tlg = require('telegraf/telegram')
 
 
 
-// bot.start((ctx)=> ctx.reply(`به بات جستجوی جزوه خوش آمدید, کلیدواژه های خود را وارد کرده
-//                              تا جزوه مورد نظر خود را برای خرید پیدا کنید!
-//                             `))
-// bot.help(function(ctx){
-//   ctx.reply(`به عنوان مثال :
-//   دین و زندگی یازدهم`)
+ bot.start((ctx)=> ctx.reply(`به بات جستجوی جزوه خوش آمدید, کلیدواژه های خود را وارد کرده
+                              تا جزوه مورد نظر خود را برای خرید پیدا کنید!
+                             `))
 
-// })
-// bot.startPolling()
-// //launch server
-// bot.launch();
+bot.on("text",function(ctx){
+  var msg = ctx.message.text
+  if(msg[0] != "/"){
+  ctx.reply("ina")
+    con.query(`SELECT files.* FROM tags,files WHERE tags.files_id = files.id AND tags.tag LIKE ?`,[msg],function(err,rows){
+      if(err){
+        console.log(err)
+      }
+      else{
+          for (var row of rows) {
+          ctx.reply(`${process.env.HOST}/file/${row.id}/${ctx.message.from.id}`)
+        }
+      }
+    })
+  }
+})
+ bot.startPolling()
+ //launch server
+ bot.launch();
 
 const app = express();
 
@@ -28,7 +42,9 @@ var PASSWORD = require("./password.json");
 app.use(body.urlencoded({extended: false}));
 app.use(body.json());
 
-app.get("/", req => req.res.send("ok"))
+app.get("/", function(req,res){
+  res.send("ok ")
+})
 app.use("/login", req => req.res.sendFile(path.join(__dirname, "./www/login.html")));
 
 app.use("/admin", auth, req => req.res.sendFile(path.join(__dirname, "./www/admin.html")));
@@ -164,7 +180,21 @@ app.post("/callback", (req, res) => {
           if(body.error_code){
             res.end()
           } else {
-            // TODO
+            // sendig file here
+            con.query(`SELECT * FROM files WHERE id = ?`, [body.order_id.split(".")[0]],function(err,rows){
+              if(err){
+                console.log(err)
+              }
+              else{
+                const file = fs.readFileSync(`./files/${rows[0].name}`);
+                bot.telegram.sendDocument(body.order_id.split(".")[1],{
+                  source: file,
+                  filename: `${rows[0].desc}.pdf`
+                },[{caption:`${body.track_id}`}]).catch(console.log);
+              }
+            })
+
+            //end
             console.log("bot send file with track_id and other infos...")
             con.query("UPDATE transactions SET status = ?, track_id = ?, card_no = ?, hash_card_no = ?, date = ?, verify = ? WHERE order_id = ?",
             [body.status, body.track_id+"."+body.payment.track_id,body.payment.card_no, body.payment.hash_card_no, body.verify.date, 1, req.body.order_id], (err, row)=>{
