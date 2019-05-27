@@ -29,8 +29,7 @@
     </form>
     <br><h3>files :</h3>
         <input type="button" value="refresh" onclick="refreshFilesList()">
-        <table style="border:1px solid black">
-            <tr><th>file</th><th>price</th><th>tags</th><th>delete</th></tr>
+        <table style="border:1px solid black" id="files">
         </table>
         <script>
             function refreshFilesList() {
@@ -41,9 +40,11 @@
                     return res;
                 }).then(res => res.json()).then(files => {
                     console.log(files);
+                    var html = "<tr><th>file</th><th>price</th><th>tags</th><th>delete</th></tr>";
                     for(var file of files) {
-                        var html = `<tr><td>${file.desc}</td><td>${file.amount}</td><td>${file.tags}</td><td><a onclick="deleteFile(${file.id})">x</a></td></tr>`
+                        html += `<tr><td>${file.desc}</td><td>${file.amount}</td><td>${file.tags.map(t => t.tag).join(",")}</td><td><a onclick="deleteFile(${file.id})">x</a></td></tr>`
                     }
+                    document.getElementById('files').innerHTML = html;
                 }).catch(err => alert("error"));
             }
             function deleteFile(id) {
