@@ -55,7 +55,7 @@ app.post("/changePassword", auth, (req, res) => {
   OLDPASSWORD = req.body.password
   NEWPASSWORD = req.body.newpassword;
 
-  if(OLDPASSWORD === PASSWORD){ // BUG ... will restart the server!!!
+  if(OLDPASSWORD === PASSWORD){ // BUG ... will restart the server after changing the paswd!!!
       fs.writeFile ("./password.json", JSON.stringify(NEWPASSWORD), (err) => {
         if (err){
           setTimeout(e => {
@@ -73,6 +73,9 @@ app.post("/changePassword", auth, (req, res) => {
     );
   } else{
     setTimeout(e => {
+      telegram.sendMessage(process.env.ADMIN_CHAT_ID, 
+        "تلاش ناموفق در تغییر پسوورد!"
+        ).catch(console.log)
       res.send("<head><title>password error</title><head><p>old password required. go to <a href='/admin'>admin panel</a></p>");
     }, 2000);
   }
