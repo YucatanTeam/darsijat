@@ -159,7 +159,7 @@ app.get("/query", auth, (req, res) => {
       var reply = "";
       reply += `<span>${rows.length} جزوه یافت شد</span><br>`;
       for (var row of rows) {
-        reply += `<span>${row.descr} ( <a href="${process.env.NODE_ENV == "development" ? process.env.HOST : ""}/file/${row.id}/${process.env.ADMIN_CHAT_ID}">خرید</a> )</span><br>`;
+        reply += `<span>${row.descr} ( <a href="${process.env.NODE_ENV == "development" ? process.env.HOST+'/' : ""}file/${row.id}/${process.env.ADMIN_CHAT_ID}">خرید</a> )</span><br>`;
       }
       return res.json({reply});
     }
