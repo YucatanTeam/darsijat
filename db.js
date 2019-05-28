@@ -4,7 +4,8 @@ const pool = mysql.createPool({
     host     : process.env.DB_HOST,
     database : process.env.DB_NAME,
     user     : process.env.DB_USER,
-    password : process.env.DB_PASS
+    password : process.env.DB_PASS,
+    insecureAuth: true
 });
 
 console.log(`created connection pool to ${process.env.DB_USER}@${process.env.DB_HOST}/${process.env.DB_NAME}`)
