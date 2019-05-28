@@ -42,7 +42,7 @@ bot.on("text",function(ctx){
         ctx.reply(`${rows.length} جزوه یافت شد`);
         for (var row of rows) {
           ctx.reply(`${row.descr}
-          ${process.env.HOST}/file/${row.id}/${process.env.ADMIN_CHAT_ID}`);
+          ${process.env.HOST}/file/${row.id}/${ctx.from.id}`);
         }
       } else { 
         ctx.reply("جزوه ای پیدا نشد!");
@@ -108,7 +108,7 @@ app.post("/file", (req, res) => {
         if(err){
           res.status(500).end("Internal Server Error!")
         } else {
-          const query = `INSERT INTO tags(files_id, tag) VALUES ${fields.tags.split(",").map(tag => `(${row.insertId},${con.escape(tag)})`).join(',')}`;
+          const query = `INSERT INTO tags(files_id, tag) VALUES ${fields.tags.split(".").map(tag => `(${row.insertId},${con.escape(tag)})`).join(',')}`;
           con.query(query, (err, row) => {
             res.send(`<head><title>${err ? "Error" : "Done"}</title><head><p>${err ? "Error" : "Done"}. go to <a href='/admin'>admin panel</a></p>`);
             con.query("SELECT * FROM tags;", (err, rows) => {
