@@ -82,6 +82,24 @@
     </div>
     <br>
     <div class="card">
+        <p class="header">find a file :</p>
+        <span>text :</span>
+        <input type="text" name="text" id="text">
+        <input type="button" value="find" onclick="findFiles()">
+        <div id="foundfiles"></div>
+        <script>
+            function findFiles() {
+                var text = document.getElementById('text').value;
+                fetch(`/query/${location.search}&text=${text}`)
+                .then(res => res.json())
+                .then(json => {
+                    document.getElementById("foundfiles").innerHTML = json.reply;
+                }).catch(err => alert("error"))
+            }
+        </script>
+    </div>
+    <br>
+    <div class="card">
         <p class="header">files :</p>
         <input type="button" value="refresh" onclick="refreshFilesList()">
         <table style="border:1px solid black" id="files">
@@ -94,7 +112,6 @@
                     }
                     return res;
                 }).then(res => res.json()).then(files => {
-                    console.log(files);
                     var html = "<tr><th>file</th><th>price</th><th>tags</th><th>delete</th></tr>";
                     for(var file of files) {
                         html += `<tr><td>${file.descr}</td><td>${file.amount}</td><td>${file.tags.map(t => t.tag).join(",")}</td><td><a onclick="deleteFile(${file.id})">x</a></td></tr>`
