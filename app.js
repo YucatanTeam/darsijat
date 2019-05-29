@@ -37,7 +37,10 @@ bot.on("text",function(ctx){
     var q = `SELECT * FROM files WHERE id in (${msg.split(" ").map(word => fuse.search(word)).flat().concat([0]).join(", ")})`;
     con.query(q, (err,rows) => {
       if(err){
-        ctx.reply("سرور موقتا در دسترس نیست")
+        ctx.reply("سرور موقتا در دسترس نیست");
+        if(process.env.NODE_ENV == "development") {
+          ctx.reply(JSON.stringify(err))
+        }
       } else if(rows.length) {
         ctx.reply(`${rows.length} جزوه یافت شد`);
         for (var row of rows) {
@@ -150,8 +153,7 @@ app.get("/query", auth, (req, res) => {
   var q = `SELECT * FROM files WHERE id in (${msg.split(" ").map(word => fuse.search(word)).flat().concat([0]).join(", ")})`;
   con.query(q, (err,rows) => {
     if(err){
-      console.log(err)
-      return res.status(500).send("server error")
+      return res.status(500).send(`server error${process.env.NODE_ENV == "development" ? " : " + JSON.stringify(err) : ""}`)
     }
     if(rows.length) {
       var reply = "";
