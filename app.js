@@ -170,6 +170,16 @@ app.get("/delete/:id", auth, (req, res) => {
       console.log(err)
       res.send("<head><title>error</title><head><p>Error. go to <a href='/admin'>admin panel</a></p>")
     } else {
+      con.query("SELECT * FROM tags;", (err, rows) => {
+        if(err) {
+          console.error("unable to initialize search")
+          process.exit(1);
+        }
+        fuse = new Fuse(rows, {
+          keys: ["tag"],
+          id: "files_id"
+        });
+      });
       con.query("SELECT * FROM files WHERE id = ?", [id], (err, row) => {
         con.query("DELETE FROM files WHERE id = ?", [id], (err, arow) => {
           if(err) {
