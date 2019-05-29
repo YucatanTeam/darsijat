@@ -132,11 +132,11 @@ app.post("/file", (req, res) => {
 app.get("/files", auth, (req, res) => {
   con.query("SELECT * FROM files", (err, files) => {
     if(err) {
-      res.status(500).json({})
+      res.status(500).json({err})
     } else {
       con.query("SELECT * FROM tags", (err, tags) => {
         if(err) {
-          return res.status(500).json({});
+          return res.status(500).json({err});
         }
         for(var file of files) {
           file.tags = tags.filter(tag => tag.files_id == file.id);
@@ -249,14 +249,14 @@ app.get("/file/:fid/:uid", (req, res) => {
           request(options, function (error, response, body) {
             if (error) {
               // console.log(error)
-              res.send("به درگاه متصل نشد!")
+              res.send(`به درگاه متصل نشد!${process.env.NODE_ENV == 'development' ? " : " + JSON.stringify(error) : ""}`)
             } else{
               // console.log(body.error_message)
-              if(body.error_code) res.send("به درگاه متصل نشد!")
+              if(body.error_code) res.send(`به درگاه متصل نشد!${process.env.NODE_ENV == 'development' ? " : " + JSON.stringify(body) : ""}`)
               else{
                 con.query("INSERT INTO transactions(id, order_id, amount, verify) VALUES(?,?,?,?) ", [body.id, order_id, row[0].amount, 0], (err, row)=>{
                   if(err) {
-                    res.status(500).send("server error!")
+                    res.status(500).send("server error!" + process.env.NODE_ENV == 'development' ? " : " + JSON.stringify(err) : "")
                   } else{
                       res.redirect(body.link)
                   }
