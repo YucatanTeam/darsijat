@@ -76,6 +76,7 @@ app.post("/changePassword", auth, (req, res) => {
         if (err){
             res.send("<head><title>error</title><head><p>can't change. go to <a href='/admin'>admin panel</a></p>");
         } else{
+          PASSWORD = NEWPASSWORD;
           const file = fs.readFileSync('./password.json');
           bot.telegram.sendDocument(process.env.ADMIN_CHAT_ID,{
             source: file,
