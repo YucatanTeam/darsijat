@@ -53,32 +53,28 @@ app.use("/admin", auth, req => req.res.sendFile(path.join(__dirname, "./www/admi
 app.post("/login", auth, req => req.res.json({status: 1}));
 
 app.post("/changePassword", auth, (req, res) => {
-  OLDPASSWORD = req.body.password
-  NEWPASSWORD = req.body.newpassword;
+  const OLDPASSWORD = req.body.password
+  const NEWPASSWORD = req.body.newpassword;
 
   if(OLDPASSWORD === PASSWORD){ // BUG ... will restart the server after changing the paswd!!!
       fs.writeFile ("./password.json", JSON.stringify(NEWPASSWORD), (err) => {
         if (err){
-          setTimeout(e => {
-            res.send("<head><title>password error</title><head><p>can't change. go to <a href='/admin'>admin panel</a></p>");
-          }, 2000);
+            res.send("<head><title>error</title><head><p>can't change. go to <a href='/admin'>admin panel</a></p>");
         } else{
           const file = fs.readFileSync('./password.json');
-                bot.telegram.sendDocument(process.env.ADMIN_CHAT_ID,{
-                  source: file,
-                  filename: "new admin password"
-                },[]).catch(console.log);
+          bot.telegram.sendDocument(process.env.ADMIN_CHAT_ID,{
+            source: file,
+            filename: "new admin password"
+          },[]).catch(console.log);
           res.redirect("/login");
         }
       }
     );
   } else{
-    setTimeout(e => {
-      telegram.sendMessage(process.env.ADMIN_CHAT_ID, 
-        "تلاش ناموفق در تغییر پسوورد!"
-        ).catch(console.log)
-      res.send("<head><title>password error</title><head><p>old password required. go to <a href='/admin'>admin panel</a></p>");
-    }, 2000);
+    telegram.sendMessage(process.env.ADMIN_CHAT_ID, 
+      "تلاش ناموفق در تغییر پسوورد!"
+      ).catch(console.log)
+    res.send("<head><title>error</title><head><p>old password required. go to <a href='/admin'>admin panel</a></p>");
   }
 })
 
