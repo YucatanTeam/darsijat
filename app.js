@@ -34,7 +34,7 @@ bot.start((ctx)=> ctx.reply(`به درسیجات خوش آمدید,
 bot.on("text",function(ctx){
   var msg = ctx.message.text
   if(msg[0] != "/"){
-    var q = `SELECT * FROM files WHERE id in (${msg.split(" ").map(word => fuse.search(word)).flat().concat([-1]).join(", ")})`;
+    var q = `SELECT * FROM files WHERE id in (${msg.split(" ").map(word => fuse.search(word)).flat().concat([0]).join(", ")})`;
     con.query(q, (err,rows) => {
       if(err){
         ctx.reply("سرور موقتا در دسترس نیست")
@@ -147,7 +147,7 @@ app.get("/files", auth, (req, res) => {
 app.get("/query", auth, (req, res) => {
   var msg = req.query.text
   // perform fuzzysearch for msg against tags
-  var q = `SELECT * FROM files WHERE id in (${msg.split(" ").map(word => fuse.search(word)).flat().concat([-1]).join(", ")})`;
+  var q = `SELECT * FROM files WHERE id in (${msg.split(" ").map(word => fuse.search(word)).flat().concat([0]).join(", ")})`;
   con.query(q, (err,rows) => {
     if(err){
       console.log(err)
