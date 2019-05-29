@@ -33,16 +33,18 @@ con.query("SELECT * FROM tags;", (err, rows) => {
 bot.on("text",function(ctx){
   var msg = ctx.message.text
   if(msg[0] != "/"){
-    con.query(`SELECT files.* FROM tags,files WHERE tags.files_id = files.id AND tags.tag LIKE ?`,[msg],function(err,rows){
+    var q = `SELECT * FROM files WHERE id in (${msg.split(" ").map(word => fuse.search(word)).flat().join(", ")})`;
+    con.query(q, (err,rows) => {
       if(err){
-        console.log(err)
-      } else if(rows.length){
-        ctx.reply(`${rows.length} جزوه یافت شد`)
+        ctx.reply("سرور موقتا در دسترس نیست")
+      } else if(rows.length) {
+        ctx.reply(`${rows.length} جزوه یافت شد`);
         for (var row of rows) {
-          ctx.reply(`${process.env.HOST}/file/${row.id}/${ctx.message.from.id}`)
+          ctx.reply(`${row.descr}
+          ${process.env.HOST}/file/${row.id}/${process.env.ADMIN_CHAT_ID}`);
         }
-      } else{
-        ctx.reply("جزوه ای پیدا نشد!")
+      } else { 
+        ctx.reply("جزوه ای پیدا نشد!");
       }
     })
   }
