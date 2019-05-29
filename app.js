@@ -34,9 +34,9 @@ bot.on("text",function(ctx){
   }
 })
 
-// bot.startPolling()
-// //launch server
-// bot.launch();
+bot.startPolling()
+//launch server
+bot.launch();
 
 const app = express();
 
