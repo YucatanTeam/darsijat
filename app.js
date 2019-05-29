@@ -125,8 +125,10 @@ app.get("/query", auth, (req, res) => {
   var msg = req.query.text
   if(msg[0] != "/"){
     con.query("SELECT * FROM tags", (err, rows) => {
-      // perform fuzzysearch for msg against tags
+      // TODO perform fuzzysearch for msg against tags
     })
+    // TODO rewrite
+    // TODO apply to bot.on("text",...)
     con.query(`SELECT files.* FROM tags,files WHERE tags.files_id = files.id AND tags.tag LIKE ?`,[msg],function(err,rows){
       if(err){
         res.status(500).send("server error")
@@ -182,7 +184,7 @@ app.get("/file/:fid/:uid", (req, res) => {
               filename: `${fi[0].descr}.pdf`
             },[{caption:`${tr.track_id}`}]).catch(console.log);
         } else{
-          res.status(404).send("فایل مورد نظر پیدا نشد!")
+          res.status(404).send("فایل مورد نظر پیدا نشد!") // TODO tell user pm admin for the file
         }
       })
     } else { // payment process
