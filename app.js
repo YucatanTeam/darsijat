@@ -195,7 +195,7 @@ app.get("/file/:fid/:uid", (req, res) => {
             headers: {
               'Content-Type': 'application/json',
               'X-API-KEY': process.env.APITOKEN,
-              'X-SANDBOX': 1, // TODO
+              'X-SANDBOX': process.env.NODE_ENV == "development",
             },
             body: {
               'order_id': order_id,
@@ -250,7 +250,7 @@ app.post("/callback", (req, res) => {
         headers: {
           'Content-Type': 'application/json',
           'X-API-KEY': process.env.APITOKEN,
-          'X-SANDBOX': 1, // TODO
+          'X-SANDBOX': process.env.NODE_ENV == "development",
         },
         body: bodyit,
         json: true,
