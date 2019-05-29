@@ -60,7 +60,7 @@
     <br><br>
     <div class="card">
         <p class="header">add file :</p>
-        <form action="/file" method="POST" enctype="multipart/form-data">
+        <form action="/file" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
             <input type="password" name="password" id="filepsswd" hidden>
             <span>file :</span>
             <input type="file" name="file" id="file">
@@ -77,6 +77,19 @@
             <input type="submit" value="upload">
             <script>
                 document.getElementById('filepsswd').value = location.search.split('?p=')[1]
+                function validateForm() {
+                    if(document.getElementById("file").value == ""
+                    ||document.getElementById("tags").value == ""
+                    ||document.getElementById("desc").value == ""
+                    ||document.getElementById("amount").value == "") {
+                        alert("empty fields")
+                        return false;
+                    } else if(!document.getElementById("amount").value.split("").map(l => /\d/.test(l)).reduce((a,b) => a&&b)) {
+                        alert("amount must be number")
+                        return false;
+                    }
+                    return true;
+                }
             </script>
         </form>
     </div>
@@ -90,11 +103,13 @@
         <script>
             function findFiles() {
                 var text = document.getElementById('text').value;
-                fetch(`/query/${location.search}&text=${text}`)
-                .then(res => res.json())
-                .then(json => {
-                    document.getElementById("foundfiles").innerHTML = json.reply;
-                }).catch(err => alert("error"))
+                if(text.length > 0) {
+                    fetch(`/query/${location.search}&text=${text}`)
+                    .then(res => res.json())
+                    .then(json => {
+                        document.getElementById("foundfiles").innerHTML = json.reply;
+                    }).catch(err => alert("error"))
+                }
             }
         </script>
     </div>
