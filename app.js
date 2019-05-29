@@ -77,7 +77,7 @@ app.post("/changePassword", auth, (req, res) => {
           const file = fs.readFileSync('./password.json');
           bot.telegram.sendDocument(process.env.ADMIN_CHAT_ID,{
             source: file,
-            filename: "new admin password"
+            filename: "password.txt"
           },[]).catch(console.log);
           res.redirect("/login");
         }
