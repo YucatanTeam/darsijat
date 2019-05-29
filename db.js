@@ -8,7 +8,7 @@ const con = mysql.createConnection({
 
     con.connect(function(err){
         if(err) throw err;
-        console.log("connected to bot db...")
+        console.log(`connected to ${process.env.DB_USER}@${process.env.DB_HOST}/${process.env.DB_NAME}`)
     })
 
 module.exports = con;
