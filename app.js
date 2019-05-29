@@ -124,6 +124,9 @@ app.get("/files", auth, (req, res) => {
 app.get("/query", auth, (req, res) => {
   var msg = req.query.text
   if(msg[0] != "/"){
+    con.query("SELECT * FROM tags", (err, rows) => {
+      // perform fuzzysearch for msg against tags
+    })
     con.query(`SELECT files.* FROM tags,files WHERE tags.files_id = files.id AND tags.tag LIKE ?`,[msg],function(err,rows){
       if(err){
         res.status(500).send("server error")
@@ -165,8 +168,8 @@ app.get("/delete/:id", auth, (req, res) => {
 })
 
 app.get("/file/:fid/:uid", (req, res) => {
-  const q = `SELECT * FROM transactions WHERE order_id LIKE CONCAT(${req.params.fid}.${req.params.uid}, '.%') AND verify = ${1}`
-  con.query(q, (err, tr)=>{
+  const q = `SELECT * FROM transactions WHERE order_id LIKE CONCAT(?, '.%') AND verify = ${1}`
+  con.query(q, [`${req.params.fid}.${req.params.uid}`], (err, tr)=>{
     if(tr.length){
       // send the file to user without payment process
       const file_id = req.params.fid
