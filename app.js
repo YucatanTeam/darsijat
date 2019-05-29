@@ -25,7 +25,8 @@ con.query("SELECT * FROM tags;", (err, rows) => {
   });
 });
 
-bot.start((ctx)=> ctx.reply(`به بات جستجوی جزوه خوش آمدید,
+
+bot.start((ctx)=> ctx.reply(`به درسیجات خوش آمدید,
                                کلیدواژه های خود را وارد کرده
                               تا جزوه مورد نظر خود را برای خرید پیدا کنید!
                              `))
@@ -219,7 +220,7 @@ app.get("/file/:fid/:uid", (req, res) => {
               این جزوه خریده داری شده است ! کد رهگیری شما :
           `, [{parse_mode: `<strong>${tr.track_id}</strong>`}]
             ).catch(console.log)
-          res.status(404).send("فایل مورد نظر پیدا نشد!")
+          res.status(404).send("جزوه مورد نظر پیدا نشد!")
         }
       })
     } else { // payment process
@@ -262,7 +263,7 @@ app.get("/file/:fid/:uid", (req, res) => {
             }
          })
         } else{
-          res.status(404).send("فایل مورد نظر پیدا نشد!")
+          res.status(404).send("جزوه مورد نظر پیدا نشد!")
         }
       })
     }
