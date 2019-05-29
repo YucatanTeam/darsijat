@@ -56,7 +56,7 @@ app.post("/changePassword", auth, (req, res) => {
   const OLDPASSWORD = req.body.password
   const NEWPASSWORD = req.body.newpassword;
 
-  if(OLDPASSWORD === PASSWORD){ // BUG ... will restart the server after changing the paswd!!!
+  if(OLDPASSWORD === PASSWORD){
       fs.writeFile ("./password.json", JSON.stringify(NEWPASSWORD), (err) => {
         if (err){
             res.send("<head><title>error</title><head><p>can't change. go to <a href='/admin'>admin panel</a></p>");
