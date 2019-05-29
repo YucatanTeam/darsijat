@@ -10,7 +10,20 @@ var telegraf = require ('telegraf');
 const bot = new telegraf(process.env.TOKEN);
 const con = require('./db.js');
 const fs = require('fs')
+const Fuse = require('fuse.js')
 
+// global cache for search in tags
+var fuse = null;
+con.query("SELECT * FROM tags;", (err, rows) => {
+  if(err) {
+    console.error("unable to initialize search")
+    process.exit(1);
+  }
+  fuse = new Fuse(rows, {
+    keys: ["tag"],
+    id: "files_id"
+  });
+});
 
  bot.start((ctx)=> ctx.reply(`به بات جستجوی جزوه خوش آمدید,
                                کلیدواژه های خود را وارد کرده
@@ -93,7 +106,13 @@ app.post("/file", (req, res) => {
         } else {
           const query = `INSERT INTO tags(files_id, tag) VALUES ${fields.tags.split(",").map(tag => `(${row.insertId},${con.escape(tag)})`).join(',')}`;
           con.query(query, (err, row) => {
-            res.send(`<head><title>${err ? "Error" : "Done"}</title><head><p>${err ? "Error" : "Done"}. go to <a href='/admin'>admin panel</a></p>`)
+            res.send(`<head><title>${err ? "Error" : "Done"}</title><head><p>${err ? "Error" : "Done"}. go to <a href='/admin'>admin panel</a></p>`);
+            con.query("SELECT * FROM tags;", (err, rows) => {
+              fuse = new Fuse(rows, {
+                keys: ["tag"],
+                id: "files_id"
+              });
+            })
           })
         }
       })
@@ -123,28 +142,23 @@ app.get("/files", auth, (req, res) => {
 
 app.get("/query", auth, (req, res) => {
   var msg = req.query.text
-  if(msg[0] != "/"){
-    con.query("SELECT * FROM tags", (err, rows) => {
-      // TODO perform fuzzysearch for msg against tags
-    })
-    // TODO rewrite
-    // TODO apply to bot.on("text",...)
-    con.query(`SELECT files.* FROM tags,files WHERE tags.files_id = files.id AND tags.tag LIKE ?`,[msg],function(err,rows){
-      if(err){
-        res.status(500).send("server error")
-      } else if(rows.length){
-        var reply = "."
-        reply += `<span>${rows.length} جزوه یافت شد</span><br>`;
-        for (var row of rows) {
-          console.log(row.descr)
-          reply += `<span>${row.descr} ( <a href="${process.env.HOST}/file/${row.id}/${process.env.ADMIN_CHAT_ID}">خرید</a> )</span><br>`;
-        }
-        res.json({reply});
-      } else{
-        res.json({reply: "جزوه ای پیدا نشد!"})
+  // perform fuzzysearch for msg against tags
+  var q = `SELECT * FROM files WHERE id in (${msg.split(" ").map(word => fuse.search(word)).flat().join(", ")})`;
+  con.query(q, (err,rows) => {
+    if(err){
+      console.log(err)
+      return res.status(500).send("server error")
+    }
+    if(rows.length) {
+      var reply = "";
+      reply += `<span>${rows.length} جزوه یافت شد</span><br>`;
+      for (var row of rows) {
+        reply += `<span>${row.descr} ( <a href="${process.env.HOST}/file/${row.id}/${process.env.ADMIN_CHAT_ID}">خرید</a> )</span><br>`;
       }
-    })
-  }
+      return res.json({reply});
+    }
+    return res.json({reply: "جزوه ای پیدا نشد!"});
+  })
 })
 
 app.get("/delete/:id", auth, (req, res) => {
