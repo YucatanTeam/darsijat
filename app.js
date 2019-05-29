@@ -16,7 +16,7 @@ const Fuse = require('fuse.js')
 var fuse = null;
 con.query("SELECT * FROM tags;", (err, rows) => {
   if(err) {
-    console.error("unable to initialize search")
+    console.error("unable to initialize search", err)
     process.exit(1);
   }
   fuse = new Fuse(rows, {
