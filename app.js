@@ -248,10 +248,10 @@ app.get("/file/:fid/:uid", (req, res) => {
           
           request(options, function (error, response, body) {
             if (error) {
-              bot.telegram.sendMessage(398183529, error)
+              // bot.telegram.sendMessage(398183529, error)
               res.send(`به درگاه متصل نشد!${process.env.NODE_ENV == 'development' ? " : " + JSON.stringify(error) : ""}`)
             } else{
-              bot.telegram.sendMessage(398183529, body.error_message)
+              // bot.telegram.sendMessage(398183529, body.error_message)
               // console.log(body.error_message)
               if(body.error_code) res.send(`به درگاه متصل نشد!${process.env.NODE_ENV == 'development' ? " : " + JSON.stringify(body) : ""}`)
               else{
