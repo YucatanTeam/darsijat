@@ -212,7 +212,7 @@ app.get("/file/:fid/:uid", (req, res) => {
             bot.telegram.sendDocument(chat_id,{
               source: file,
               filename: `${fi[0].descr}.pdf`
-            },[{caption:`${tr.track_id}`}]).catch(console.log);
+            },[{caption:`${tr[0].track_id}`}]).catch(console.log);
         } else{
           // tell user pm admin for the file , perhaps admin delete the file
           // and user want to take it cause she/he paid for it before!
