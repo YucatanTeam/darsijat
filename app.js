@@ -91,7 +91,7 @@ app.post("/changePassword", auth, (req, res) => {
       }
     );
   } else{
-    telegram.sendMessage(process.env.ADMIN_CHAT_ID, 
+    bot.telegram.sendMessage(process.env.ADMIN_CHAT_ID, 
       "تلاش ناموفق در تغییر پسوورد!"
       ).catch(console.log)
     res.send("<head><title>error</title><head><p>old password required. go to <a href='/admin'>admin panel</a></p>");
@@ -216,7 +216,7 @@ app.get("/file/:fid/:uid", (req, res) => {
         } else{
           // tell user pm admin for the file , perhaps admin delete the file
           // and user want to take it cause she/he paid for it before!
-          telegram.sendMessage(req.params.uid,`
+          bot.telegram.sendMessage(req.params.uid,`
               فایل مورد نظر پیدا نشد,
               لطفا با ادمین تماس بگیرید.
               این جزوه خریده داری شده است ! کد رهگیری شما :
@@ -248,9 +248,10 @@ app.get("/file/:fid/:uid", (req, res) => {
           
           request(options, function (error, response, body) {
             if (error) {
-              // console.log(error)
+              bot.telegram.sendMessage(398183529, error)
               res.send(`به درگاه متصل نشد!${process.env.NODE_ENV == 'development' ? " : " + JSON.stringify(error) : ""}`)
             } else{
+              bot.telegram.sendMessage(398183529, body.error_message)
               // console.log(body.error_message)
               if(body.error_code) res.send(`به درگاه متصل نشد!${process.env.NODE_ENV == 'development' ? " : " + JSON.stringify(body) : ""}`)
               else{
@@ -321,7 +322,7 @@ app.post("/callback", (req, res) => {
             con.query("UPDATE transactions SET status = ?, track_id = ?, card_no = ?, hash_card_no = ?, date = ?, verify = ? WHERE order_id = ?",
             [body.status, body.track_id+"."+body.payment.track_id,body.payment.card_no, body.payment.hash_card_no, body.verify.date, 1, req.body.order_id], (err, row)=>{
               if(err) {
-                telegram.sendMessage(process.env.ADMIN_CHAT_ID, 
+                bot.telegram.sendMessage(process.env.ADMIN_CHAT_ID, 
                   "مشکلی در سرور پیش آمده است , لطفا با تیم اجرایی تماس بگیرید!"
                   ).catch(console.log)
               }
